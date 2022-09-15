@@ -1,0 +1,20 @@
+name: scanpy
+channels:
+  - r
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - pip
+  - python==3.10.6
+  - ipykernel
+  - ipywidgets
+  - pip:
+    - decoupler==1.2.0
+    - scanpy==1.8.2
+    - harmonypy
+    - omnipath
+    - jupyterlab
+    - scrublet
+    - leidenalg
+    - adjustText
