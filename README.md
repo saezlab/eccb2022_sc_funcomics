@@ -44,7 +44,7 @@ diverse cell types, or sc atlases.
 
 6. Load R env
 
-7. Run liana on disease alone
+7. Run LIANA on disease alone
 
 
 Part III - Robin

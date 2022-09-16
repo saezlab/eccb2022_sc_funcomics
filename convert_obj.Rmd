@@ -65,36 +65,8 @@ liana_test <- liana_wrap(sobj, method="logfc")
 saveRDS(sobj, "data/sobj_temp.RDS")
 ```
 
+```{r}
 
-
-<!-- ### Convert to SCE -->
-<!-- ```{r} -->
-<!-- assays <- list(counts=as(t(py$adata$layers['counts']), "CsparseMatrix"), -->
-<!--                logcounts=as(t(py$adata$layers['counts']), "CsparseMatrix")) -->
-<!-- row_data <- DataFrame(py$adata$var) -->
-<!-- col_data <- DataFrame(py$adata$obs) -->
-
-<!-- rownames(assays$counts) <- rownames(row_data) -->
-<!-- rownames(assays$logcounts) <- rownames(row_data) -->
-<!-- colnames(assays$counts) <- rownames(col_data) -->
-<!-- colnames(assays$logcounts) <- rownames(col_data) -->
-
-<!-- sce <- SingleCellExperiment(assays, -->
-<!--                             colData=DataFrame(py$adata$obs), -->
-<!--                             rowData=row_data -->
-<!--                             ) -->
-<!-- colLabels(sce) <- sce$cell_type -->
-
-<!-- sce <- LogNormalize(sce) -->
-
-<!-- liana_wrap(sce, method="logfc") -->
-
-<!-- ``` -->
-
-
-<!-- ```{r} -->
-
-<!-- ``` -->
-
+```
 
 
