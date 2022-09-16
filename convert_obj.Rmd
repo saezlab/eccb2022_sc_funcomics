@@ -30,25 +30,35 @@ import seaborn as sns
 ```
 
 
-
+## Load the adata object, as prepared by Part1
 ```{python}
 adata = sc.read_h5ad("data/adata.h5ad")
 ```
 
 
-### Convert to Seurat
+### Convert it to Seurat
 ```{r}
 #' Function to Convert adata to Seurat object
 #' @param adata anndata object as obtain from the function above
 #' @returns a Seurat object
 adata_to_seurat <- function(adata){
-    exprs <- as(t(as.matrix(py$adata$X)), "CsparseMatrix")
-    colnames(exprs) <- py$adata$obs_names$to_list()
-    rownames(exprs) <- py$adata$var_names$to_list()
+    # Counts
+    counts <- as(t(as.matrix(py$adata$layers['counts'])), "CsparseMatrix")
+    colnames(counts) <- py$adata$obs_names$to_list()
+    rownames(counts) <- py$adata$var_names$to_list()
+    
+    # Data
+    logcounts <- as(t(as.matrix(py$adata$layers['logcounts'])), "CsparseMatrix")
+    colnames(logcounts) <- py$adata$obs_names$to_list()
+    rownames(logcounts) <- py$adata$var_names$to_list()
+    
     # Create the Seurat object
-    seurat_object <- CreateSeuratObject(exprs)
+    seurat_object <- CreateSeuratObject(counts)
     # Set the expression assay
-    seurat_object <- SetAssayData(seurat_object, "counts", exprs)
+    seurat_object <- SetAssayData(seurat_object, "counts", counts)
+    # log-normalize
+    seurat_object <- NormalizeData(seurat_object)
+    
     # Add observation metadata
     seurat_object <- AddMetaData(seurat_object, py$adata$obs)
     return(seurat_object)
@@ -56,17 +66,10 @@ adata_to_seurat <- function(adata){
 ```
 
 ```{r}
+# Get Seurat Object
 sobj <- adata_to_seurat(py$adata)
 Idents(sobj) <- sobj@meta.data$cell_type
 
-liana_test <- liana_wrap(sobj, method="logfc")
-
-
-saveRDS(sobj, "data/sobj_temp.RDS")
+# Save Seurat Object
+saveRDS(sobj, "data/sobj.RDS")
 ```
-
-```{r}
-
-```
-
-
