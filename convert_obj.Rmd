@@ -1,0 +1,100 @@
+---
+title: "2_EnrichmentReport"
+author: "Daniel Dimitrov"
+date: "9/15/2022"
+output: html_document
+---
+
+
+## Load Required Libs
+```{r setup, include=FALSE}
+require(tidyverse)
+require(reticulate)
+require(Seurat)
+require(magrittr)
+require(liana)
+```
+
+
+### Load Relevant Libraries
+
+```{python}
+import scanpy as sc
+import decoupler as dc
+
+# Only needed for processing and plotting
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+```
+
+
+
+```{python}
+adata = sc.read_h5ad("data/adata.h5ad")
+```
+
+
+### Convert to Seurat
+```{r}
+#' Function to Convert adata to Seurat object
+#' @param adata anndata object as obtain from the function above
+#' @returns a Seurat object
+adata_to_seurat <- function(adata){
+    exprs <- as(t(as.matrix(py$adata$X)), "CsparseMatrix")
+    colnames(exprs) <- py$adata$obs_names$to_list()
+    rownames(exprs) <- py$adata$var_names$to_list()
+    # Create the Seurat object
+    seurat_object <- CreateSeuratObject(exprs)
+    # Set the expression assay
+    seurat_object <- SetAssayData(seurat_object, "counts", exprs)
+    # Add observation metadata
+    seurat_object <- AddMetaData(seurat_object, py$adata$obs)
+    return(seurat_object)
+}
+```
+
+```{r}
+sobj <- adata_to_seurat(py$adata)
+Idents(sobj) <- sobj@meta.data$cell_type
+
+liana_test <- liana_wrap(sobj, method="logfc")
+
+
+saveRDS(sobj, "data/sobj_temp.RDS")
+```
+
+
+
+<!-- ### Convert to SCE -->
+<!-- ```{r} -->
+<!-- assays <- list(counts=as(t(py$adata$layers['counts']), "CsparseMatrix"), -->
+<!--                logcounts=as(t(py$adata$layers['counts']), "CsparseMatrix")) -->
+<!-- row_data <- DataFrame(py$adata$var) -->
+<!-- col_data <- DataFrame(py$adata$obs) -->
+
+<!-- rownames(assays$counts) <- rownames(row_data) -->
+<!-- rownames(assays$logcounts) <- rownames(row_data) -->
+<!-- colnames(assays$counts) <- rownames(col_data) -->
+<!-- colnames(assays$logcounts) <- rownames(col_data) -->
+
+<!-- sce <- SingleCellExperiment(assays, -->
+<!--                             colData=DataFrame(py$adata$obs), -->
+<!--                             rowData=row_data -->
+<!--                             ) -->
+<!-- colLabels(sce) <- sce$cell_type -->
+
+<!-- sce <- LogNormalize(sce) -->
+
+<!-- liana_wrap(sce, method="logfc") -->
+
+<!-- ``` -->
+
+
+<!-- ```{r} -->
+
+<!-- ``` -->
+
+
+
