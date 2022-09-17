@@ -1,0 +1,14 @@
+name: seurat
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - r-seurat=4*
+  - r-knitr
+  - r-remotes
+  - r-tidyverse
+  - r-igraph
+  - r-smoof
+  - r-quantreg
+  - r-beeswarm
+  - r-logger
