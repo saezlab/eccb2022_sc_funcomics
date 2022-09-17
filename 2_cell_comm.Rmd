@@ -29,17 +29,15 @@ downstream responses, including the induction of known pathways or transcription
 ![](src/ccc_overview.png){width=60%}
 
 
-## Set-up Env
+## Set-up the Env
 
-Before we start we would need to install two CCC packages that we will use:
+Before we start, we would need to install the LIANA framework packages that we will use:
 [LIANA](https://saezlab.github.io/liana/) and [NicheNet](https://github.com/saeyslab/nichenetr).
 
-```{r, message=FALSE, warning=FALSE}
-if(!require(liana)) remotes::install_github("saezlab/liana", quiet = TRUE)
-library(liana)
-if(!require(nichenetr)) remotes::install_github("saeyslab/nichenetr", quiet = TRUE)
-library(nichenetr)
+```{r}
+if(!require(liana)) remotes::install_github("saezlab/liana")
 library(tidyverse)
+library(liana)
 ```
 
 
@@ -225,6 +223,12 @@ liana_res %>%
 
 
 ## NicheNet
+
+Load and Install NicheNet
+```{r}
+if(!require(nichenetr)) remotes::install_github("saeyslab/nichenetr")
+library(nichenetr)
+```
 
 ### NicheNet: studying cell-cell communication by bridging ligand-receptor infence tools and footprint approaches
 
