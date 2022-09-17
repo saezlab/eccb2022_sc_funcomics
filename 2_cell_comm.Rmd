@@ -358,7 +358,11 @@ DE_table <- readr::read_delim("data/deg.csv",delim = ",")
 ```
 
 ```{r}
-geneset_oi <- DE_table %>% filter(contrast == receiver)  %>% filter(pval < 0.05 & abs(logFC) > 0.50) %>% pull(name) %>% unique()
+geneset_oi <- DE_table %>%
+  filter(contrast == receiver) %>%
+  filter(pvals < 0.05 & abs(logFCs) > 0.50) %>%
+  pull(name) %>%
+  unique()
 ```
 
 For the ligand acivity analysis, we also need to define the genomic background, which we choose here to be all genes in the receiver cell type considered for the DE analysis. 
@@ -448,7 +452,9 @@ colnames(vis_ligand_receptor_network) <-  order_ligands_receptor %>% make.names(
 ```
 
 ```{r, fig.width= 11}
-p_ligand_receptor_network <- vis_ligand_receptor_network %>% t() %>% make_heatmap_ggplot("Ligands","Receptors", color = "mediumvioletred", x_axis_position = "top",legend_title = "Prior interaction potential")
+p_ligand_receptor_network <- vis_ligand_receptor_network %>% t() %>%
+  make_heatmap_ggplot("Ligands","Receptors", color = "mediumvioletred",
+                      x_axis_position = "top",legend_title = "Prior interaction potential")
 p_ligand_receptor_network
 ```
 
@@ -461,7 +467,13 @@ In contrast to Liana, NicheNet ligand-receptor interactions are inferred when th
 This is what we will show now. We just need to redefine the `potential_ligands`, rerun the NicheNet ligand activity analysis and the downstream visualizations.
 
 ```{r}
-potential_ligands_liana <-  liana_res %>% filter(target == receiver) %>% pull(ligand.complex) %>% unique()  %>% intersect(colnames(ligand_target_matrix)) # only keep common ligands
+potential_ligands_liana <- 
+  liana_res %>% 
+  filter(target == receiver) %>%
+  separate_rows(ligand.complex, sep="[_]") %>%
+  pull(ligand.complex) %>%
+  unique() %>%
+  intersect(colnames(ligand_target_matrix)) # only keep common ligands
 ```
 
 Compare the list of potential ligands from the default NicheNet analysis to the one based on LIANA
@@ -472,9 +484,14 @@ potential_ligands %>% setdiff(potential_ligands_liana) # unique for NicheNet's l
 ```
 
 ```{r}
-ligand_activities <- predict_ligand_activities(geneset = geneset_oi, background_expressed_genes = background_expressed_genes, ligand_target_matrix = ligand_target_matrix, potential_ligands = potential_ligands_liana)
+ligand_activities <- predict_ligand_activities(geneset = geneset_oi,
+                                               background_expressed_genes = background_expressed_genes,
+                                               ligand_target_matrix = ligand_target_matrix,
+                                               potential_ligands = potential_ligands_liana)
 
-ligand_activities <- ligand_activities %>% arrange(-aupr) %>% mutate(rank = rank(desc(aupr)))
+ligand_activities <- ligand_activities %>%
+  arrange(-aupr) %>%
+  mutate(rank = rank(desc(aupr)))
 
 ligand_activities
 ```
@@ -489,7 +506,11 @@ Seurat::DotPlot(sobj, features = best_upstream_ligands_liana, cols = "RdYlBu") +
 ```
 
 ```{r}
-active_ligand_target_links_df <- best_upstream_ligands_liana %>% lapply(get_weighted_ligand_target_links,geneset = geneset_oi, ligand_target_matrix = ligand_target_matrix, n = 500) %>% bind_rows() %>% drop_na()
+active_ligand_target_links_df <- best_upstream_ligands_liana %>%
+  lapply(get_weighted_ligand_target_links,geneset = geneset_oi,
+         ligand_target_matrix = ligand_target_matrix, n = 500) %>%
+  bind_rows() %>%
+  drop_na()
 
 active_ligand_target_links <- prepare_ligand_target_visualization(ligand_target_df = active_ligand_target_links_df, ligand_target_matrix = ligand_target_matrix, cutoff = 0.33)
 
@@ -537,7 +558,9 @@ liana_nichenet %>% filter(target == receiver & rank_Nichenet <= 30) %>% group_by
 Note: the prioritization by Liana is made based on specificity, by NicheNet based on ligand activity. None of these two approaches ranks ligands based on their differential expression between COVID and normal, which could also be an interesting aspect to use for prioritization. Therefore, we will also add the DE information (covid vs normal) for the sender cell and receiver cell types because we expect that some of these active ligands might be upregulated (or their receptor(s)). We can thus use this information for even further filtering. 
 
 ```{r}
-liana_nichenet <- liana_nichenet %>% left_join(DE_table %>% rename(source = contrast, ligand.complex = name, logFC_ligand = logFC, pval_ligand = pval)) %>% left_join(DE_table %>% rename(target = contrast, receptor.complex = name, logFC_receptor = logFC, pval_receptor = pval))
+liana_nichenet <- liana_nichenet %>%
+  left_join(DE_table %>% rename(source = contrast, ligand.complex = name, logFC_ligand = logFCs, pval_ligand = pvals)) %>%
+  left_join(DE_table %>% rename(target = contrast, receptor.complex = name, logFC_receptor = logFCs, pval_receptor = pvals))
 
 liana_nichenet %>% filter(logFC_ligand >= 0.5 |  logFC_receptor >= 0.5) %>% filter(rank_Nichenet <= 30)
 ```
@@ -547,11 +570,14 @@ Above, we ran over all the NicheNet analysis steps one-by-one. In practice, we a
 ### NicheNet analysis with wrapper
 
 ```{r}
-source("nichenet_wrapper.R")
+source("src/nichenet_wrapper.R")
 ```
 
 ```{r}
-nichenet_output_Tcells <- nichenet_covid19_wrapper(receiver = "T cells", DE_table = DE_table, sobj = sobj,  liana_res = liana_res, ligand_target_matrix = ligand_target_matrix)
+nichenet_output_Tcells <- nichenet_covid19_wrapper(receiver = "T cells",
+                                                   DE_table = DE_table,
+                                                   sobj = sobj,  liana_res = liana_res,
+                                                   ligand_target_matrix = ligand_target_matrix)
 ```
 
 ```{r, fig.width=13}

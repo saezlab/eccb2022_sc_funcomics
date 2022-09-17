@@ -69,5 +69,5 @@ Yvan Saeys
 
 Julio Saez-Rodriguez  
 
-A join effort by Sae((ys)|(z)) labs!
+A join effort by Sae(ys|z) labs!
 
