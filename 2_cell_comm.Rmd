@@ -31,17 +31,14 @@ downstream responses, including the induction of known pathways or transcription
 
 ## Set-up Env
 
-Before we start we would need to install tidyverse (a user-friedly functional programming frameowrk),
-and the two CCC packages that we will use: [LIANA](https://saezlab.github.io/liana/)
-and [NicheNet](https://github.com/saeyslab/nichenetr).
+Before we start we would need to install two CCC packages that we will use:
+[LIANA](https://saezlab.github.io/liana/) and [NicheNet](https://github.com/saeyslab/nichenetr).
 
 ```{r, message=FALSE, warning=FALSE}
 if(!require(liana)) remotes::install_github("saezlab/liana", quiet = TRUE)
 library(liana)
 if(!require(nichenetr)) remotes::install_github("saeyslab/nichenetr", quiet = TRUE)
 library(nichenetr)
-
-if(!require(tidyverse)) install.packages("tidyverse")
 library(tidyverse)
 ```
 
