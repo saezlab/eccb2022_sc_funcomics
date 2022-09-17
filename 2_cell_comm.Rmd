@@ -10,8 +10,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Introduction
 
-In biology, cells are not independent entities and they dynamically react to stimuli
-from their environment, including such from other cells,  and we we refer to those
+In biology, cells are not independent entities. They dynamically react to stimuli
+from their environment, including such from other cells, and we we refer to those
 as cell-cell communication events (CCC).
 CCC events are essential for biological processes like apoptosis and
 cell migration, and are hence essential in homeostasis, development, and disease.
@@ -21,9 +21,9 @@ transcriptomics data, CCC inference is becoming a routine approach in transcript
 data analysis.
 
 CCC commonly refers to interactions between secreted ligands and a corresponding plasma membrane receptor.
-However, this picture can be broadened to include secreted enzymes, extracellular matrix proteins,
+However, this picture can be broadened to include secreted enzymes, extra-cellular matrix proteins,
 transporters, and interactions that require the physical contact between cells, 
-such as cell-cell adhesion proteins and gap junctions. Furtheremore, CCC is not independent
+such as cell-cell adhesion proteins and gap junctions. Furthermore, CCC is not independent
 of other process, but rather the contrary, as intercellular interactions elicit a
 downstream responses, including the induction of known pathways or transcription factors.
 ![](src/ccc_overview.png){width=60%}
