@@ -188,6 +188,17 @@ Q: Does that mean that we cannot trust CCC predictions?
 (Not necessarily!)
 
 
+## NicheNet
+
+
+
+## NicheNet x LIANA
+```{r, echo=FALSE}
+url = "https://saezlab.github.io/liana/articles/liana_nichenet.svg"
+```
+<center><img src="`r url`" width="80%"></center>
+
+
 ### Using LIANA as a Consensus
 
 Finally, we will use LIANA to generate a consensus score from multiple methods,
@@ -226,10 +237,6 @@ liana_res %>%
                                    vjust = 0.5,
                                    hjust= 0.5))
 ```
-
-## NicheNet
-
-
 
 
 ## Limitations and Assumptions
