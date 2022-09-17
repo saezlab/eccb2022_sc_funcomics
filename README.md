@@ -20,7 +20,7 @@ python -m ipykernel install --user --name=scanpy --display-name='scanpy'
 
 Download the raw scRNA-seq data and decompress it:
 ```
-wget https://figshare.com/ndownloader/files/37484434
+wget "https://figshare.com/ndownloader/files/37484434" -O data.zip
 unzip data.zip
 ```
 
