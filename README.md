@@ -36,11 +36,16 @@ conda activate seurat
 rstudio
 ```
 
-## File Description
-`1_sc_analysis.ipynb` - Jupyter Note book with Part 1
-`2_cell_comm.Rmd` (`2_cell_comm.html`) - R Markdown (and corresponding html) with Part 2
-`scanpy_env.yml` - A yaml file with the conda environment needed for Part 1
-`/src` - directory with figures and helper functions
+## File Description  
+
+`1_sc_analysis.ipynb` - Jupyter Note book with Part 1  
+
+`2_cell_comm.Rmd` (`2_cell_comm.html`) - R Markdown (and corresponding html) with Part 2  
+
+`scanpy_env.yml` - A yaml file with the conda environment needed for Part 1  
+
+`/src` - directory with figures and helper functions  
+
 
 ## Author Names (Alphabetically)
 
