@@ -1,6 +1,5 @@
 ---
 title: "Cell-Cell Comunication inference"
-author: "Daniel, Robin, Pau"
 date: "5/9/2022"
 output: html_document
 ---
@@ -11,34 +10,31 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Introduction
 
-For simplicity, we refer to all of these events involving protein-protein interactions as CCC.
+In biology, cells are not independent entities and they dynamically react to stimuli
+from their environment, including such from other cells,  and we we refer to those
+as cell-cell communication events (CCC).
+CCC events are essential for biological processes like apoptosis and
+cell migration, and are hence essential in homeostasis, development, and disease.
 
-Cells are not independent entities in biology, they react to stimuli coming
-from their environment. Cells can react to chemical cues, including such from 
-other cells, that we will refer to as cell-cell communication events (CCC). 
-These cell-cell signaling events can trigger crucial biological processes
-like apoptosis or cell migration, making the study of them relevant to better
-understand diseases. 
+As a consequence of the continuously growing popularity of dissociated and spatial
+transcriptomics data, CCC inference is becoming a routine approach in transcriptomics
+data analysis.
 
-CCC events are essential for homeostasis, development, and disease,
-and their estimation is becoming a routine approach in scRNA-seq data analysis.
-
-CCC commonly refers to interactions between secreted ligands and plasma membrane receptors.
-However, picture can be broadened to include secreted enzymes, extracellular matrix proteins,
+CCC commonly refers to interactions between secreted ligands and a corresponding plasma membrane receptor.
+However, this picture can be broadened to include secreted enzymes, extracellular matrix proteins,
 transporters, and interactions that require the physical contact between cells, 
-such as cell-cell adhesion proteins and gap junctions.
-
-Furthermore, CCC communication events ellicit a downstream response, such as the
-induction of known pathways or transcription factors.
+such as cell-cell adhesion proteins and gap junctions. Furtheremore, CCC is not independent
+of other process, but rather the contrary, as intercellular interactions elicit a
+downstream responses, including the induction of known pathways or transcription factors.
 ![](src/ccc_overview.png){width=60%}
 
-Although different types of tools to infer CCC events from single-cell data exist,
-they often focus either on ligand-receptor predictions alone, or such which 
-also connect to downstream signaling. Here, we will showcase both.
 
 ## Set-up Env
 
-Namely, install and the two CCC packages that we will use: LIANA and NicheNet.
+Before we start we would need to install tidyverse (a user-friedly functional programming frameowrk),
+and the two CCC packages that we will use: [LIANA](https://saezlab.github.io/liana/)
+and [NicheNet](https://github.com/saeyslab/nichenetr).
+
 ```{r, message=FALSE, warning=FALSE}
 if(!require(liana)) remotes::install_github("saezlab/liana", quiet = TRUE)
 library(liana)
@@ -50,7 +46,7 @@ library(tidyverse)
 ```
 
 
-#### Load the single-cell data but now as Seurat object
+#### Load the single-cell data but now as [Seurat](https://satijalab.org/seurat/) object
 ```{r, warning=FALSE, message=FALSE}
 sobj <- readRDS("data/sobj.RDS")
 ```
@@ -59,11 +55,11 @@ sobj <- readRDS("data/sobj.RDS")
 ## Ligand-Receptor Inference
 
 We will first explore perhaps the most common and likely simplest methods, i.e.
-such which aim to prioritize ligand-receptor interactions alone.
+those which aim to prioritize ligand-receptor interactions alone.
 
-There is an ever-growing  number of methods aimed at this particular inference task.
-We recently have harmonized seven of them, along with 16 ligand-receptor prior knowledge resources
-into the ligand-receptor framework - [LIANA](https://saezlab.github.io/liana/articles/liana_tutorial.html).
+There is an ever-growing number of methods aimed at this particular inference task.
+We recently have harmonized seven of them, along with 16 ligand-receptor resources
+in the ligand-receptor framework [LIANA](https://saezlab.github.io/liana/articles/liana_tutorial.html).
 
 ```{r}
 url = "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs41467-022-30755-0/MediaObjects/41467_2022_30755_Fig1_HTML.png?as=webp"
@@ -74,13 +70,15 @@ url = "https://media.springernature.com/full/springer-static/image/art%3A10.1038
 Often many of the ligand-receptor tools come in fixed combinations of method and
 resource, and we will quickly run a couple of them via LIANA.
 Namely [CellPhoneDB](https://www.nature.com/articles/s41596-020-0292-x) and 
-[NATMI](https://www.nature.com/articles/s41467-020-18873-z), each with it's matching resource.
+[NATMI](https://www.nature.com/articles/s41467-020-18873-z), each with it's
+corresponding resource.
 
-As is generally the case, we will apply those methods to predict interactions from
+As is commonly the case, we will apply those methods to predict interactions from
 steady-state, or single-context data. More specifically, we will focus on inferring
 the interactions thought to be most relevant among all cell types.
 
-As such, we will create an object with COVID-19 infected blood cells alone.
+This, we need to first subsample the [Seurat](https://satijalab.org/seurat/)
+object with COVID-19 infected blood cells alone.
 ```{r}
 sobj_covid <- sobj[, sobj@meta.data$condition=="covid"]
 # Remove erythroid cells
@@ -92,7 +90,12 @@ sobj_covid@meta.data$cell_type <- as.factor(sobj_covid@meta.data$cell_type)
 ### NATMI
 
 We will first run NATMI, a method which in single-context data, proposes 
-a score which also aims at inferring interaction specificity.
+an example of a score which aims at inferring interaction specificity.
+This is done under the assumption that interactions specific to a given
+pair of cell types are more interesting than those shared between all cell types.
+
+Q: Is this logic flawed? If you think it is, then is differential analysis between
+cell types also flawed?
 
 ![NATMI's specificity edge](src/natmi_formula.png){width=50%}
 (Adapted from Burmedi et al 2021, *Unpublished*)
@@ -124,6 +127,10 @@ CellPhoneDB(v2) uses a permutation-based approach which reshuffles cell labels
 in order to generate a Null distribution. This distribution is then used to
 estimate p-values that represent the specificity of the interactions across all
 cell types.
+
+Hence, a typical usage of CellPhoneDB in a steady-state data would imply that 
+one can focus on the mean expression between a ligand and receptor, subsequent
+to filtering according to a significance threshold.
 
 ```{r}
 cpdb_res <- liana_wrap(sobj_covid,
@@ -166,9 +173,13 @@ cpdb_res %>%
                                    hjust= 0.5))
 ```
 
-Strangely, see very little agreement between the tools, even though despite
-their different algorithms and resources,
-both aim at predicting the most relevant interactions.
+Note the "_" - this is meant to separate subunits of heteromeric complexes.
+Q: Why could this be important?
+
+
+We also note that there is little agreement between our two runs, even though despite
+their different algorithms, resources, and assumptions, both aim at predicting
+the most relevant interactions.
 
 In a recent publication, we saw that both the method and the resource of choice 
 could affect the predictions that we get [Dimitrov el al., 2022](https://www.nature.com/articles/s41467-022-30755-0).
@@ -233,13 +244,15 @@ At the same time we also make the assumptions of:
 - CCC also is often solely explained by gene expression, and hence via proteins, neglecting metabolic and mRNA exchange
 - CCC inferred at the cluster level is meaningful
 
-![](src/ccc_limitations.png){width=90%}
+![](src/ccc_limitations.png)
 
 
 
 ## References
 
 Browaeys, R., Saelens, W. and Saeys, Y., 2020. NicheNet: modeling intercellular communication by linking ligands to target genes. Nature methods, 17(2), pp.159-162.
+
+Butler, A., Hoffman, P., Smibert, P., Papalexi, E. and Satija, R., 2018. Integrating single-cell transcriptomic data across different conditions, technologies, and species. Nature biotechnology, 36(5), pp.411-420.
 
 Cabello-Aguilar, S., Alame, M., Kon-Sun-Tack, F., Fau, C., Lacroix, M. and Colinge, J., 2020. SingleCellSignalR: inference of intercellular networks from single-cell transcriptomics. Nucleic Acids Research, 48(10), pp.e55-e55.
 
