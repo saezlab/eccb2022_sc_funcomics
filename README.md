@@ -46,6 +46,10 @@ rstudio
 
 `/src` - directory with figures and helper functions  
 
+`NicheNet_FAQ.md` - Some frequently asked questions (and answers) concerning NicheNet
+
+`nichenet_wrapper.R` - NicheNet wrapper that will be used at the end of `2_cell_comm.Rmd`
+
 
 ## Author Names (Alphabetically)
 

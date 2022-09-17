@@ -228,14 +228,16 @@ liana_res %>%
 
 ### NicheNet: studying cell-cell communication by bridging ligand-receptor infence tools and footprint approaches
 
-NicheNet is a second type of approach to study cell-cell communication from scRNA-seq data. The first type of tools described here above are useful to get an extensive list of expressed / cell-type specific interactions between the different cell types in your data. However, the output is typically a very large list of possible ligand-receptor interactions between all cell types. Consequently, it is not immediately clear what the most important interactions are.
+NicheNet is a second type of approach to study cell-cell communication from scRNA-seq data. The first type of tools described here above are useful to get an extensive list of expressed / cell-type specific interactions between the different cell types in your data. However, the output is typically a very large list of possible ligand-receptor interactions between all cell types (cf output table of CellphoneDB, NATMI, Liana,...). Consequently, it is not immediately clear what the most important interactions are.
 
-**NicheNet** (paper: https://www.nature.com/articles/s41592-019-0667-5; github: https://github.com/saeyslab/nichenetr) is a cell-cell communication algorithm that was developed to help prioritizing ligand-receptor interactions for further experimental validation. It does this by considering the **signaling effect** that these ligand-receptor interactions have. When a certain cell type ("sender cell type") produces a ligand that can bind to a receptor on the membrane of another cell type ("receiver cell type"), signal transduction pathways are activated, leading to changes in gene expression. The genes of which expression changes in response to a ligand-receptor interaction ("target genes") are typically specific for each ligand (family). NicheNet exploits this principle by looking whether there are **target genes** of expressed ligand-receptor pairs enriched in the receiver cell type after the cell-cell communication process. NicheNet thus ranks / prioritizes ligands based on the gene regulatory effect (**"ligand activity"**) they might have. 
+**NicheNet** (paper: https://www.nature.com/articles/s41592-019-0667-5; github: https://github.com/saeyslab/nichenetr) is a cell-cell communication algorithm that was developed to help prioritizing ligand-receptor interactions for further experimental validation. It does this by considering the **signaling effect** that these ligand-receptor interactions have. When a certain cell type ("sender cell type") produces a ligand that can bind to a receptor on the membrane of another cell type ("receiver cell type"), signal transduction pathways are activated, leading to changes in gene expression. The genes of which expression changes in response to a ligand-receptor interaction ("target genes") are typically specific for each ligand (family). 
 
 ```{r, echo=FALSE}
 url = "https://saezlab.github.io/liana/articles/liana_nichenet.svg"
 ```
 <center><img src="`r url`" width="80%"></center>
+
+NicheNet uses this information then to look for whether there are **target genes** of expressed ligand-receptor pairs enriched in the receiver cell type after the cell-cell communication process. NicheNet thus ranks / prioritizes ligands based on the gene regulatory effect (**"ligand activity"**) they might have. 
 
 <br><br>
 ![](src/comparison_other_approaches_2.jpg){width=450}
@@ -348,7 +350,7 @@ Note: if you don't have information about sender cell types, you can choose all 
 In this step, we will use the DE results generated during the decoupler vignette, and use the same thresholds to define the DE genes in the receiver cell population. 
 
 ```{r}
-DE_table <- readr::read_delim("deg.csv",delim = ",")
+DE_table <- readr::read_delim("data/deg.csv",delim = ",")
 ```
 
 ```{r}
@@ -582,7 +584,9 @@ At the same time we also make the assumptions of:
 - CCC inferred at the cluster level is meaningful
 
 ![](src/ccc_limitations.png)
+## Putting it all together
 
+Q: What similarities and difference in biological interpretation do you observe between de diferent analyses you performed (footprint/enrichment, ligand-receptor prediction, NicheNet analysis)? Can you explain some of the differences?
 
 
 ## References
