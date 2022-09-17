@@ -18,6 +18,12 @@ conda activate scanpy
 python -m ipykernel install --user --name=scanpy --display-name='scanpy'
 ```
 
+Download the raw scRNA-seq data and decompress it:
+```
+wget https://figshare.com/ndownloader/files/37484434
+unzip data.zip
+```
+
 Then to start working run:
 ```
 jupyter-lab
