@@ -33,7 +33,8 @@ jupyter-lab
 
 ### Installation
 ```
-mamba create -n seurat -c conda-forge -c bioconda r-seurat=4* r-knitr r-remotes r-tidyverse bioconductor-scran bioconductor-sparsematrixstats bioconductor-complexheatmap r-igraph r-smoof r-emoa r-quantreg bioconductor-scater r-beeswarm r-logger -y
+conda activate base
+mamba env create -f seurat_env.yml --name seurat
 ```
 
 Then to start working run:
