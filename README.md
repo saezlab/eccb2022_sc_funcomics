@@ -27,10 +27,25 @@ jupyter-lab
 
 ### Installation
 ```
-mamba create -n seurat -c conda-forge -c bioconda r-seurat=4*
+mamba create -n seurat -c conda-forge -c bioconda r-seurat=4* r-knitr r-remotes r-tidyverse -y
 ```
 
 Then to start working run:
 ```
+conda activate seurat
 rstudio
 ```
+
+## File Description
+`1_sc_analysis.ipynb` - Jupyter Note book with Part 1
+`2_cell_comm.Rmd` (`2_cell_comm.html`) - R Markdown (and corresponding html) with Part 2
+`scanpy_env.yml` - A yaml file with the conda environment needed for Part 1
+`/src`
+
+## Author Names (Alphabetically)
+
+Pau Badia i Mompel
+Robin Browaeys 
+Daniel Dimitrov
+Yvan Saeys
+Julio Saez-Rodriguez
