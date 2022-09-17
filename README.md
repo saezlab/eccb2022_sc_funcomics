@@ -40,12 +40,17 @@ rstudio
 `1_sc_analysis.ipynb` - Jupyter Note book with Part 1
 `2_cell_comm.Rmd` (`2_cell_comm.html`) - R Markdown (and corresponding html) with Part 2
 `scanpy_env.yml` - A yaml file with the conda environment needed for Part 1
-`/src`
+`/src` - directory with figures and helper functions
 
 ## Author Names (Alphabetically)
 
-Pau Badia i Mompel
-Robin Browaeys 
-Daniel Dimitrov
-Yvan Saeys
-Julio Saez-Rodriguez
+Pau Badia i Mompel  
+
+Robin Browaeys  
+
+Daniel Dimitrov  
+
+Yvan Saeys  
+
+Julio Saez-Rodriguez  
+
