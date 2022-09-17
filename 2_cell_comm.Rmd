@@ -188,7 +188,7 @@ Finally, we will use LIANA to generate a consensus score from multiple methods,
 and we will use a Consensus resource, which is built from multiple literature-curated
 ligand-receptor resources.
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 liana_res <- liana_wrap(sobj_covid,
                         resource = "Consensus",
                         verbose = FALSE,
@@ -344,7 +344,9 @@ receptors <- lr_network %>% pull(to) %>% unique()
 expressed_ligands <- intersect(ligands,expressed_genes_sender)
 expressed_receptors <- intersect(receptors,expressed_genes_receiver)
 
-potential_ligands <- lr_network %>% filter(from %in% expressed_ligands & to %in% expressed_receptors) %>% pull(from) %>% unique()
+potential_ligands <- lr_network %>% 
+  filter(from %in% expressed_ligands & to %in% expressed_receptors) %>%
+  pull(from) %>% unique()
 ```
 
 Note: if you don't have information about sender cell types, you can choose all the ligands in the NicheNet database as potential_ligands. This is dan similar to the CytoSig Cytokine Activity prediction, but with a filter on receptors that should be expressed by the recever. 
@@ -368,15 +370,19 @@ geneset_oi <- DE_table %>%
 For the ligand acivity analysis, we also need to define the genomic background, which we choose here to be all genes in the receiver cell type considered for the DE analysis. 
 
 ```{r}
-background_expressed_genes <- DE_table %>% filter(contrast == receiver) %>% pull(name) %>% unique()
+background_expressed_genes <- DE_table %>%
+  filter(contrast == receiver) %>%
+  pull(name) %>% unique()
 ```
 
 Both our geneset of interest and background should only contain genes for which we have prior knowledge (so; that is part of our ligand-target matrix)
 
 ```{r}
 print(setdiff(geneset_oi, rownames(ligand_target_matrix))) # which genes will not be considered
-geneset_oi <- geneset_oi %>% .[. %in% rownames(ligand_target_matrix)]
-background_expressed_genes <- background_expressed_genes %>% .[. %in% rownames(ligand_target_matrix)]
+geneset_oi <- geneset_oi %>%
+  .[. %in% rownames(ligand_target_matrix)]
+background_expressed_genes <- background_expressed_genes %>%
+  .[. %in% rownames(ligand_target_matrix)]
 print(length(geneset_oi))
 print(length(background_expressed_genes))
 ```
@@ -388,9 +394,14 @@ Note: we want to have good ratio of geneset of interest vs background (50-1000 g
 To calculate ligand activities, we do the following: we will assess how well each ligand can predict which genes belong to the geneset of interest versus the background. Or in other words, we will assess whether genes with higher regulatory potential to be regulated by a ligand, are more likely to belong the geneset of interest. We assume that for active ligands, the target genes with high potential should be enriched in the geneset of interest. Mathematically we do the following: calculating the pearson correlation between the target gene regulatory potential vector of a ligand, and the vector that indicates whether a gene belongs to the geneset or not. Other metrics that are also calculated are the area under the precision-recall curve (aupr) and receiver operating characteristic curve (auroc). In our validation study, we showed that the pearson correlation coefficient was the most predictive measure of ligand activity for NicheNet-v1, but the AUPR for NicheNet-v2. If you are using the NicheNet-v2 networks and models as in this tutorial, we best use the AUPR to rank our ligands. (for the NicheNet-v1 model as currently shown in the github vignettes, this is thus based on the pearson correlation)
 
 ```{r}
-ligand_activities <- predict_ligand_activities(geneset = geneset_oi, background_expressed_genes = background_expressed_genes, ligand_target_matrix = ligand_target_matrix, potential_ligands = potential_ligands)
+ligand_activities <- predict_ligand_activities(geneset = geneset_oi, 
+                                               background_expressed_genes = background_expressed_genes,
+                                               ligand_target_matrix = ligand_target_matrix,
+                                               potential_ligands = potential_ligands)
 
-ligand_activities <- ligand_activities %>% arrange(-aupr) %>% mutate(rank = rank(desc(aupr)))
+ligand_activities <- ligand_activities %>% 
+  arrange(-aupr) %>% 
+  mutate(rank = rank(desc(aupr)))
 
 ligand_activities
 ```
@@ -398,42 +409,76 @@ ligand_activities
 NicheNet just ranks ligands during the ligand activity procedure. To check by which sender cell types these ligands are expressed, you can run:
 
 ```{r, fig.width=13}
-best_upstream_ligands <- ligand_activities %>% top_n(30, aupr) %>% arrange(-aupr) %>% pull(test_ligand) %>% unique()
+best_upstream_ligands <- ligand_activities %>%
+  top_n(30, aupr) %>% 
+  arrange(-aupr) %>%
+  pull(test_ligand) %>%
+  unique()
 
-Seurat::DotPlot(sobj, features = best_upstream_ligands, cols = "RdYlBu") + Seurat::RotatedAxis()
+Seurat::DotPlot(sobj, 
+                features = best_upstream_ligands,
+                cols = "RdYlBu") +
+  Seurat::RotatedAxis()
 ```
 
 ### Step 5: Infer top-predicted target genes and receptors of ligands that are top-ranked in the ligand activity analysis
 
 ```{r}
-active_ligand_target_links_df <- best_upstream_ligands %>% lapply(get_weighted_ligand_target_links,geneset = geneset_oi, ligand_target_matrix = ligand_target_matrix, n = 500) %>% bind_rows() %>% drop_na()
+active_ligand_target_links_df <- best_upstream_ligands %>%
+  lapply(get_weighted_ligand_target_links,geneset = geneset_oi,
+         ligand_target_matrix = ligand_target_matrix, n = 500) %>%
+  bind_rows() %>% 
+  drop_na()
 
-active_ligand_target_links <- prepare_ligand_target_visualization(ligand_target_df = active_ligand_target_links_df, ligand_target_matrix = ligand_target_matrix, cutoff = 0.33)
+active_ligand_target_links <- 
+  prepare_ligand_target_visualization(ligand_target_df = active_ligand_target_links_df, 
+                                      ligand_target_matrix = ligand_target_matrix,
+                                      cutoff = 0.33)
 
-order_ligands <- intersect(best_upstream_ligands, colnames(active_ligand_target_links)) %>% rev() %>% make.names()
-order_targets <- active_ligand_target_links_df$target %>% unique() %>% intersect(rownames(active_ligand_target_links)) %>% make.names()
-rownames(active_ligand_target_links) <- rownames(active_ligand_target_links) %>% make.names() # make.names() for heatmap visualization of genes like H2-T23
-colnames(active_ligand_target_links) <- colnames(active_ligand_target_links) %>% make.names() # make.names() for heatmap visualization of genes like H2-T23
+order_ligands <- intersect(best_upstream_ligands,
+                           colnames(active_ligand_target_links)) %>% rev() %>% make.names()
+order_targets <- active_ligand_target_links_df$target %>%
+  unique() %>% 
+  intersect(rownames(active_ligand_target_links)) %>%
+  make.names()
+rownames(active_ligand_target_links) <- rownames(active_ligand_target_links) %>%
+  make.names() # make.names() for heatmap visualization of genes like H2-T23
+colnames(active_ligand_target_links) <- colnames(active_ligand_target_links) %>%
+  make.names() # make.names() for heatmap visualization of genes like H2-T23
 
-vis_ligand_target <- active_ligand_target_links[order_targets,order_ligands] %>% t()
+vis_ligand_target <- active_ligand_target_links[order_targets,order_ligands] %>%
+  t()
 ```
 
 ```{r, fig.height= 7, fig.width = 14}
-p_ligand_target_network <-  vis_ligand_target %>% make_heatmap_ggplot("Prioritized ligands","Predicted target genes", color = "purple",legend_position = "top", x_axis_position = "top",legend_title = "Regulatory potential")  + theme(axis.text.x = element_text(face = "italic")) + scale_fill_gradient2(low = "whitesmoke",  high = "purple", breaks = c(0,0.0045,0.0090))
+p_ligand_target_network <-  vis_ligand_target %>% 
+  make_heatmap_ggplot("Prioritized ligands","Predicted target genes",
+                      color = "purple",legend_position = "top", x_axis_position = "top",
+                      legend_title = "Regulatory potential")  +
+  theme(axis.text.x = element_text(face = "italic")) +
+  scale_fill_gradient2(low = "whitesmoke",  high = "purple", breaks = c(0,0.0045,0.0090))
 p_ligand_target_network
 ```
 
 Now visualise the receptors of these ligands:
 ```{r}
-weighted_networks_lr <-  weighted_networks$lr_sig %>% inner_join(lr_network %>% distinct(from,to), by = c("from","to"))
+weighted_networks_lr <-  weighted_networks$lr_sig %>%
+  inner_join(lr_network %>% 
+               distinct(from,to), by = c("from","to"))
 
-lr_network_top <- lr_network %>% filter(from %in% best_upstream_ligands & to %in% expressed_receptors) %>% distinct(from,to)
+lr_network_top <- lr_network %>% 
+  filter(from %in% best_upstream_ligands & to %in% expressed_receptors) %>%
+  distinct(from,to)
 best_upstream_receptors <-  lr_network_top %>% pull(to) %>% unique()
 
-lr_network_top_df_large <-  weighted_networks_lr %>% filter(from %in% best_upstream_ligands & to %in% best_upstream_receptors)
+lr_network_top_df_large <-  weighted_networks_lr %>%
+  filter(from %in% best_upstream_ligands & to %in% best_upstream_receptors)
 
-lr_network_top_df <-  lr_network_top_df_large %>% spread("from","weight",fill = 0)
-lr_network_top_matrix <-  lr_network_top_df %>% select(-to) %>% as.matrix() %>% magrittr::set_rownames(lr_network_top_df$to)
+lr_network_top_df <-  lr_network_top_df_large %>%
+  spread("from","weight",fill = 0)
+lr_network_top_matrix <-  lr_network_top_df %>%
+  select(-to) %>% as.matrix() %>%
+  magrittr::set_rownames(lr_network_top_df$to)
 
 dist_receptors <- dist(lr_network_top_matrix, method = "binary")
 hclust_receptors <-  hclust(dist_receptors, method = "ward.D2")
@@ -444,7 +489,8 @@ hclust_ligands <-  hclust(dist_ligands, method = "ward.D2")
 order_ligands_receptor <-  hclust_ligands$labels[hclust_ligands$order]
 
 order_receptors <- order_receptors %>% intersect(rownames(lr_network_top_matrix))
-order_ligands_receptor <-  order_ligands_receptor %>% intersect(colnames(lr_network_top_matrix))
+order_ligands_receptor <-  order_ligands_receptor %>%
+  intersect(colnames(lr_network_top_matrix))
 
 vis_ligand_receptor_network <-  lr_network_top_matrix[order_receptors, order_ligands_receptor]
 rownames(vis_ligand_receptor_network) <-  order_receptors %>% make.names()
@@ -467,8 +513,7 @@ In contrast to Liana, NicheNet ligand-receptor interactions are inferred when th
 This is what we will show now. We just need to redefine the `potential_ligands`, rerun the NicheNet ligand activity analysis and the downstream visualizations.
 
 ```{r}
-potential_ligands_liana <- 
-  liana_res %>% 
+potential_ligands_liana <- liana_res %>% 
   filter(target == receiver) %>%
   separate_rows(ligand.complex, sep="[_]") %>%
   pull(ligand.complex) %>%
@@ -497,12 +542,20 @@ ligand_activities
 ```
 NicheNet just ranks ligands during the ligand activity procedure. To check by which sender cell types these ligands are expressed, you can run:
 ```{r, fig.width=13}
-best_upstream_ligands_liana <- ligand_activities %>% top_n(30, aupr) %>% arrange(-aupr) %>% pull(test_ligand) %>% unique()
+best_upstream_ligands_liana <- ligand_activities %>%
+  top_n(30, aupr) %>%
+  arrange(-aupr) %>%
+  pull(test_ligand) %>%
+  unique()
 
-best_upstream_ligands_liana %>% setdiff(best_upstream_ligands) # unique for liana's ligands
-best_upstream_ligands %>% setdiff(best_upstream_ligands_liana) # unique for NicheNet's ligands
+best_upstream_ligands_liana %>%
+  setdiff(best_upstream_ligands) # unique for liana's ligands
+best_upstream_ligands %>%
+  setdiff(best_upstream_ligands_liana) # unique for NicheNet's ligands
 
-Seurat::DotPlot(sobj, features = best_upstream_ligands_liana, cols = "RdYlBu") + Seurat::RotatedAxis()
+Seurat::DotPlot(sobj, 
+                features = best_upstream_ligands_liana, cols = "RdYlBu") +
+  Seurat::RotatedAxis()
 ```
 
 ```{r}
@@ -512,32 +565,52 @@ active_ligand_target_links_df <- best_upstream_ligands_liana %>%
   bind_rows() %>%
   drop_na()
 
-active_ligand_target_links <- prepare_ligand_target_visualization(ligand_target_df = active_ligand_target_links_df, ligand_target_matrix = ligand_target_matrix, cutoff = 0.33)
+active_ligand_target_links <- 
+  prepare_ligand_target_visualization(ligand_target_df = active_ligand_target_links_df,
+                                      ligand_target_matrix = ligand_target_matrix,
+                                      cutoff = 0.33)
 
-order_ligands <- intersect(best_upstream_ligands_liana, colnames(active_ligand_target_links)) %>% rev() %>% make.names()
-order_targets <- active_ligand_target_links_df$target %>% unique() %>% intersect(rownames(active_ligand_target_links)) %>% make.names()
-rownames(active_ligand_target_links) <- rownames(active_ligand_target_links) %>% make.names() # make.names() for heatmap visualization of genes like H2-T23
-colnames(active_ligand_target_links) <- colnames(active_ligand_target_links) %>% make.names() # make.names() for heatmap visualization of genes like H2-T23
+order_ligands <- intersect(best_upstream_ligands_liana,
+                           colnames(active_ligand_target_links)) %>%
+  rev() %>% make.names()
+order_targets <- active_ligand_target_links_df$target %>%
+  unique() %>% intersect(rownames(active_ligand_target_links)) %>%
+  make.names()
+rownames(active_ligand_target_links) <- rownames(active_ligand_target_links) %>%
+  make.names() # make.names() for heatmap visualization of genes like H2-T23
+colnames(active_ligand_target_links) <- colnames(active_ligand_target_links) %>%
+  make.names() # make.names() for heatmap visualization of genes like H2-T23
 
-vis_ligand_target <- active_ligand_target_links[order_targets,order_ligands] %>% t()
+vis_ligand_target <- active_ligand_target_links[order_targets,order_ligands] %>%
+  t()
 ```
 
 ```{r, fig.height = 7, fig.width=14}
-p_ligand_target_network <- vis_ligand_target %>% make_heatmap_ggplot("Prioritized ligands","Predicted target genes", color = "purple",legend_position = "top", x_axis_position = "top",legend_title = "Regulatory potential")  + theme(axis.text.x = element_text(face = "italic")) + scale_fill_gradient2(low = "whitesmoke",  high = "purple", breaks = c(0,0.0045,0.0090))
+p_ligand_target_network <- vis_ligand_target %>%
+  make_heatmap_ggplot("Prioritized ligands","Predicted target genes",
+                      color = "purple",legend_position = "top",
+                      x_axis_position = "top",legend_title = "Regulatory potential") + 
+  theme(axis.text.x = element_text(face = "italic")) +
+  scale_fill_gradient2(low = "whitesmoke",  high = "purple", breaks = c(0,0.0045,0.0090))
 p_ligand_target_network
 ```
 
 In a next step, we will add the ligand activities to the Liana output table. 
 
 ```{r}
-liana_nichenet <- liana_res %>% filter(target == receiver) %>% left_join(ligand_activities %>% rename(ligand.complex = test_ligand, rank_Nichenet = rank))
+liana_nichenet <- liana_res %>%
+  filter(target == receiver) %>%
+  left_join(ligand_activities %>%
+              rename(ligand.complex = test_ligand,
+                     rank_Nichenet = rank))
 ```
 We will now visualize the top interactions prioritized by both methods. 
 
 First, we will show LIANA's top 50 LR interactions towards the receiver cell type assessed in NicheNet, that are also supported with NicheNet prioritization (e.g. in top 30 of NicheNet's ligand activities)
 
 ```{r, warning=FALSE, fig.width=16, fig.height=20}
-liana_nichenet %>% filter(target == receiver & rank_Nichenet <= 30) %>%
+liana_nichenet %>% 
+  filter(target == receiver & rank_Nichenet <= 30) %>%
   liana_dotplot(target_groups = receiver,
                 ntop = 50) +
   theme(axis.text.x = element_text(angle = 90, 
@@ -548,7 +621,10 @@ liana_nichenet %>% filter(target == receiver & rank_Nichenet <= 30) %>%
 Now we will show the opposite type of plot: show the NicheNet top 30 ligands, within their top 2 scoring pairs according to LIANA
 
 ```{r, warning=FALSE, fig.width=16, fig.height=15}
-liana_nichenet %>% filter(target == receiver & rank_Nichenet <= 30) %>% group_by(ligand.complex) %>% top_n(2, desc(aggregate_rank)) %>%
+liana_nichenet %>% 
+  filter(target == receiver & rank_Nichenet <= 30) %>%
+  group_by(ligand.complex) %>%
+  top_n(2, desc(aggregate_rank)) %>%
   liana_dotplot() +
   theme(axis.text.x = element_text(angle = 90, 
                                    vjust = 0.5,
@@ -559,10 +635,17 @@ Note: the prioritization by Liana is made based on specificity, by NicheNet base
 
 ```{r}
 liana_nichenet <- liana_nichenet %>%
-  left_join(DE_table %>% rename(source = contrast, ligand.complex = name, logFC_ligand = logFCs, pval_ligand = pvals)) %>%
-  left_join(DE_table %>% rename(target = contrast, receptor.complex = name, logFC_receptor = logFCs, pval_receptor = pvals))
+  left_join(DE_table %>%
+              rename(source = contrast, ligand.complex = name,
+                     logFC_ligand = logFCs, pval_ligand = pvals)) %>%
+  left_join(DE_table %>% 
+              rename(target = contrast, receptor.complex = name,
+                     logFC_receptor = logFCs,
+                     pval_receptor = pvals))
 
-liana_nichenet %>% filter(logFC_ligand >= 0.5 |  logFC_receptor >= 0.5) %>% filter(rank_Nichenet <= 30)
+liana_nichenet %>%
+  filter(logFC_ligand >= 0.5 |  logFC_receptor >= 0.5) %>%
+  filter(rank_Nichenet <= 30)
 ```
 
 Above, we ran over all the NicheNet analysis steps one-by-one. In practice, we also recommend users to first build a step-by-step pipeline of NicheNet. But for future easier use, you can make a wrapper around your pipeline. We did this here as well for this case study and will now quickly run the NicheNet for the other cell types.
