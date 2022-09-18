@@ -80,3 +80,14 @@ Julio Saez-Rodriguez
 
 A join effort by Sae(ys|z) labs!
 
+## Contact us!
+Pau - @PauBadiaM; pau.badia(at)uni-heidelberg.de
+Daniel - @DanielBDimitrov; daniel.dimitrov(at)uni-heldeberg.de
+Robin - @RobinBrowaeys; robin.browaeys(at)irc.vib-UGent.be
+
+
+## We are also looking for people. Join us!! :)
+
+
+
+
