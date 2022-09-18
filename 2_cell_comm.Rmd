@@ -56,7 +56,7 @@ There is an ever-growing number of methods aimed at this particular inference ta
 We recently have harmonized seven of them, along with 16 ligand-receptor resources
 in the ligand-receptor framework [LIANA](https://saezlab.github.io/liana/articles/liana_tutorial.html).
 
-```{r}
+```{r, echo=FALSE}
 url = "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs41467-022-30755-0/MediaObjects/41467_2022_30755_Fig1_HTML.png?as=webp"
 ```
 
