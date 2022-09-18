@@ -4,7 +4,7 @@ Recent advances in omics technologies have led to a rapid increase in the popula
 
 ## Data Availability
 Please download the data folder from here:
-https://figshare.com/account/home#/projects/149065
+https://figshare.com/articles/dataset/Tutorial_Data/21152242
 
 
 ## 1. Single-cell processing, enrichment and footprint analysis
